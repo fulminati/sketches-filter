@@ -16,7 +16,7 @@ module.exports = {
      *
      */
     selector: function (filter) {
-        return new RegExp('@' + filter + '\\(("|\')?(.*?)("|\')?\\)', 'gm')
+        return new RegExp('@' + filter + '\\(.*?\\)', 'gm')
     },
 
     /**
@@ -26,21 +26,15 @@ module.exports = {
      * @param processSelector
      */
     onBefore: function (sketch, filter, processor) {
-        console.log(sketch);
         var files = glob.sync('**/*.{ino,h}', { cwd: sketch.path, absolute: true })
         var selector = this.selector(filter)
 
-        console.log(selector)
-
         foreach(files, (file) => {
-            console.log('-', file)
-            var code = fu.readFile(file)
-
-            console.log(code);
+            var prev = file + '.' + filter
+            var code = fu.readFile(fu.fileExists(prev) ? prev : file)
 
             if (code.match(selector)) {
-                console.log ("asd");
-                fu.writeFile(file + '.' + filter, code)
+                fu.writeFile(prev, code)
                 fu.writeFile(file, this.processor(code, selector, processor))
             }
         });
@@ -71,5 +65,14 @@ module.exports = {
             //let token = arguments.shift()
             return processor(token)
         })
+    },
+
+    /**
+     *
+     * @param string
+     * @returns {string}
+     */
+    quote: function (string) {
+        return '"' + string + '"';
     }
 };
