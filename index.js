@@ -6,8 +6,10 @@
  */
 
 const fu = require('nodejs-fu')
+    , cliz = require('cliz')
     , glob = require('glob')
     , foreach = require('boor').foreach
+    , EOL = require('os')
 
 module.exports = {
 
@@ -16,7 +18,7 @@ module.exports = {
      *
      */
     selector: function (filter) {
-        return new RegExp('@' + filter + '\\(.*?\\)', 'gm')
+        return new RegExp('@' + filter + '\\(([^]*?)\\)', 'gm')
     },
 
     /**
@@ -31,11 +33,12 @@ module.exports = {
 
         foreach(files, (file) => {
             var prev = file + '.' + filter
-            var code = fu.readFile(fu.fileExists(prev) ? prev : file)
+            var meta = fu.readFile(fu.fileExists(prev) ? prev : file)
 
-            if (code.match(selector)) {
-                fu.writeFile(prev, code)
-                fu.writeFile(file, this.processor(code, selector, processor))
+            if (meta.match(selector)) {
+                var code = this.processor(file, meta, selector, processor)
+                fu.writeFile(prev, meta)
+                fu.writeFile(file, code)
             }
         });
     },
@@ -59,11 +62,40 @@ module.exports = {
      * @param code
      * @param processor
      */
-    processor: function (code, selector, processor) {
-        return code.replace(selector, function (token, arg1, arg2) {
-            console.log('AA', token)
-            //let token = arguments.shift()
-            return processor(token)
+    processor: function (file, code, selector, processor) {
+        return code.replace(selector, function (token, args) {
+            let left = code.substr(0, code.indexOf(token))
+            let row = (left.match(/\n/g) || []).length + 1;
+            let col = left.length - left.lastIndexOf('\n')
+
+            let I = '[-+]?\\d+'
+            let F = '[-+]?\\d+\\.\\d'
+            let L = '[a-zA-Z_]+\\w*'
+            let S = '("(?:[^"\\\\]|\\\\.)*")'
+            let Q = '(\'(?:[^\'\\\\]|\\\\.)*\')'
+            let V = `(${I}|${F}|${L}|${S}|${Q})`
+
+            if (!args.match(new RegExp(`^\\s*${V}(\\s*,\\s*${V})*\\s*$`, 'm'))) {
+                cliz.fatal(`Filter syntax error at '${file}' line '${row}'.`);
+            }
+
+            let tokenizer = new RegExp(`\\s*${V}\\s*`, 'gm')
+            let value = null;
+            let values = [];
+            while (true) {
+                value = tokenizer.exec(args);
+                if (!value) { break; }
+                else if (value[1].match(new RegExp(`^${I}$`, 'gm'))) { value = parseInt(value[1]); }
+                else if (value[1].match(new RegExp(`^${F}$`, 'gm'))) { value = parseFloat(value[1]); }
+                else if (value[1].match(new RegExp(`^${L}$`, 'gm'))) { value = value[1]; }
+                else if (value[1].match(new RegExp(`^${S}$`, 'gm'))) { value = value[1].slice(1, -1).replace(/\\"/gm, '"'); }
+                else if (value[1].match(new RegExp(`^${Q}$`, 'gm'))) { value = value[1].slice(1, -1).replace(/\\'/gm, "'"); }
+                values.push(value)
+            }
+
+            console.log(values)
+            process.exit();
+            return processor(values)
         })
     },
 
