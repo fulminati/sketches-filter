@@ -93,8 +93,6 @@ module.exports = {
                 values.push(value)
             }
 
-            console.log(values)
-            process.exit();
             return processor(values)
         })
     },
