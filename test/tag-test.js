@@ -8,7 +8,7 @@ const chai = require('chai')
 
 chai.use(require('chai-fs'))
 
-describe('testing tag', function () {
+describe('tag', function () {
 
     it('apply', function () {
         copy(join(__dirname, 'fixtures'), 'temp')
