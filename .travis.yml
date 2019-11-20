@@ -3,13 +3,12 @@ group: stable
 dist: trusty
 sudo: required
 language: node_js
-node_js: 6
+node_js: 8
 
 branches:
   only: master
 
 before_script:
-  - mkdir -p coverage
   - npm install -g istanbul codecov
 
 script:

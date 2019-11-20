@@ -1,0 +1,1 @@
+@test2(1.2)@test2(Label)@test2('Single Quoted')@test2("Double Quoted")
