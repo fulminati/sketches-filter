@@ -13,7 +13,7 @@
     "main": "index.js",
     "scripts": {
         "test": "mocha --reporter spec --recursive",
-        "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec --recursive"
+        "coverage": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- -R spec --recursive"
     },
     "devDependencies": {
         "chai": "^3.5.0",
