@@ -19,7 +19,7 @@
         "chai": "^3.5.0",
         "chai-fs": "^1.0.0",
         "fs-extra": "^8.1.0",
-        "mocha": "^3.2.0"
+        "mocha": "^10.2.0"
     },
     "dependencies": {
         "boor": "0.0.2",
